@@ -9,15 +9,27 @@
 
 {% block content %}
     <h1 class="text-center">Result</h1>
-        <ul class="list-group">
+        <div class="row pb-5">
             {% for category, classification in classification_result.items() %}
                 {% if classification == 1 %}
-                    <li class="list-group-item list-group-item-success text-center">{{category.replace('_', ' ').title()}}</li>
+                    <div class="col-3  text-center p-2">
+                      <div class="card bg-success text-white">
+                       <div class="card-body">
+                        {{category.replace('_', ' ').title()}}
+                       </div>
+                      </div>
+                    </div>
                 {% else %}
-                    <li class="list-group-item list-group-item-dark text-center">{{category.replace('_', ' ').title()}}</li>
+                    <div class="col-3 text-center  p-2">
+                        <div class="card">
+                            <div class="card-body">
+                                {{category.replace('_', ' ').title()}}
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
             {% endfor %}
-
+            </div>
         </div>
     </div>
 
