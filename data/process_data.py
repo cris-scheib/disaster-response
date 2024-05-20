@@ -41,6 +41,7 @@ def clean_data(df):
     df = df.drop('categories', axis=1)
     df = df.join(categories)
     df = df.drop_duplicates()
+    df = df[df['related'] != 2]
     return df
 
 def save_data(df, database_filename):
@@ -52,7 +53,7 @@ def save_data(df, database_filename):
         database_filename: the filepath to save the dump
     '''
     engine = create_engine('sqlite:///' + database_filename)
-    df.to_sql('data_table', engine, index=False)
+    df.to_sql('data_table', engine, index=False, if_exists='replace')
     pass  
 
 

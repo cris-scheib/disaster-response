@@ -8,6 +8,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.model_selection import GridSearchCV
 
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
@@ -20,10 +21,10 @@ nltk.download('omw-1.4')
 def load_data(database_filepath):
     '''
     returns data loaded from a database
-    
+
     input:
         database_filepath: the filepath of the database
-    
+
     output:
         X: input data 
         Y: target variable 
@@ -46,10 +47,10 @@ def load_data(database_filepath):
 def tokenize(text):
     '''
     returns the tokenized text
-    
+
     input:
         text: the phrase to be tokenized
-    
+
     output:
         clean_tokens: a list of tokens 
     '''
@@ -67,22 +68,33 @@ def tokenize(text):
 def build_model():
     '''
     returns the model build in a Pipeline
-    
+
     output:
-        pipeline: the pipeline of the model 
+        model: the pipeline of the model using GridSearch
     '''
-    return Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize, ngram_range=(1, 2))),
+
+    pipeline = Pipeline([
+        ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
         ('multi_clf', MultiOutputClassifier(
-            RandomForestClassifier(n_estimators=300)))
+            RandomForestClassifier()))
     ])
+
+    parameters = {
+        'vect__ngram_range': ((1, 1), (1, 2)),
+        'multi_clf__estimator__n_estimators': [100, 200, 300],
+        'multi_clf__estimator__max_depth': [None, 10, 20],
+        'multi_clf__estimator__min_samples_split': [2, 5, 10],
+    }
+
+    model = GridSearchCV(pipeline, param_grid=parameters)
+    return model
 
 
 def evaluate_model(model, X_test, Y_test, categories):
     '''
     prints the evaluation of the model
-    
+
     input:
         model: the model
         X_test: input data of the test dataset
@@ -97,11 +109,14 @@ def evaluate_model(model, X_test, Y_test, categories):
     recall = []
     f1 = []
 
-    num_output_variables = Y_test.shape[1]  # Assuming y_true and y_pred have the same shape
+    # Assuming y_true and y_pred have the same shape
+    num_output_variables = Y_test.shape[1]
 
     for i in range(num_output_variables):
-        precision.append(precision_score(y_true[:, i], y_pred[:, i], average='micro'))
-        recall.append(recall_score(y_true[:, i], y_pred[:, i], average='micro'))
+        precision.append(precision_score(
+            y_true[:, i], y_pred[:, i], average='micro'))
+        recall.append(recall_score(
+            y_true[:, i], y_pred[:, i], average='micro'))
         f1.append(f1_score(y_true[:, i], y_pred[:, i], average='micro'))
 
     # Print or store the results
@@ -116,7 +131,7 @@ def evaluate_model(model, X_test, Y_test, categories):
 def save_model(model, model_filepath):
     '''
     saves the model in a pickle file
-    
+
     input:
         model: the model to be save
         model_filepath: the filepath to save the model
@@ -132,7 +147,7 @@ def main():
         X, Y, categories = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(
             X, Y, test_size=0.2)
-        
+
         print('Building model...')
         model = build_model()
 
